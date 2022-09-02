@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contatore</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            font-family: sans-serif;
+            font-size: 25px;
+            background-color: green;
+        }
+
+        body.full {
+            background-color: red;
+        }
+
+        .button {
+            cursor: pointer;
+            padding: 10px 50px;
+            border-radius: 9999px;
+            border: solid 1px#000;
+            transition: .25s;
+        }
+
+        .button:hover {
+            color: #fff;
+            background-color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="button" id="plus">+</div>
+    <div id="counter">0</div>
+    <div class="button" id="minus">–</bdivutton>
+</body>
+<script>
+    const max = 5;
+    let count = 0;
+    const counter = document.querySelector("#counter");
+    const plus = document.querySelector("#plus");
+    const minus = document.querySelector("#minus");
+
+    const api_url = "https://data.mongodb-api.com/app/data-lrxzl/endpoint/data/v1"
+    const api_key = "r4d9mx7XbM1VzKDMepAQLxEiiTFdwh2kdYDs8Zg7cpHT160Bm6hV40BwzDCGYnRj"
+
+    const counterUpdate = () => {
+        counter.innerHTML = count;
+
+        fetch(api_url + "/action/updateOne", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': api_key },
+            body: JSON.stringify({
+                "collection": "contatore",
+                "database": "casadellafoto",
+                "dataSource": "Cluster0",
+                "filter": { "id": "1" },
+                "update": {
+                    "$set": { "count": count }
+                }
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data);
+            })
+            .catch((err) => console.log(err));
+    }
+
+    const counterPlus = () => {
+        console.log("+")
+        count++;
+        if (count >= max) {
+            document.body.classList.add("full");
+        } else {
+            document.body.classList.remove("full");
+        }
+        counterUpdate();
+    }
+
+    const counterMinus = () => {
+        console.log("–")
+        if (count != 0) {
+            count--;
+        }
+        if (count < max) {
+            document.body.classList.remove("full");
+        }
+        counterUpdate();
+    }
+
+    const init = () => {
+        plus.addEventListener("click", counterPlus);
+        minus.addEventListener("click", counterMinus);
+
+        fetch(api_url + "/action/findOne", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': api_key },
+            body: JSON.stringify({
+                "collection": "contatore",
+                "database": "casadellafoto",
+                "dataSource": "Cluster0",
+                "filter": { "id": "1" },
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data)
+                count = data.document.count;
+                counterUpdate();
+            })
+            .catch((err) => console.log(err));
+    }
+
+    init();
+</script>
+
+</html>
